@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
-import { gql, useMutation } from '@apollo/client'
+import { useState } from "react";
+import { gql, useMutation, useQuery } from '@apollo/client'
+import { ALL_MISSIONS_QUERY } from './PostList'
 
 const CREATE_CANDIDATE_MUTATION = gql`
   mutation createCandidat(
@@ -7,14 +8,16 @@ const CREATE_CANDIDATE_MUTATION = gql`
     $lastName: String,
     $cv: FileFieldInput,
     $availableFrom: DateTime,
-    $availableTo: DateTime
+    $availableTo: DateTime,
+    $postuleTo: MissionRelateToOneForCreateInput
   ) {
     createCandidat(data: {
         name: $name,
         lastName: $lastName,
         cv: $cv,
         availableFrom: $availableFrom,
-        availableTo: $availableTo
+        availableTo: $availableTo,
+        postuleTo: $postuleTo
       }
     ) {
       name
@@ -26,6 +29,7 @@ const CREATE_CANDIDATE_MUTATION = gql`
 export default function Submit() {
   const [file, setFile] = useState(null)
   const [createCandidat, { loading }] = useMutation(CREATE_CANDIDATE_MUTATION)
+  const { data: { missions } } = useQuery(ALL_MISSIONS_QUERY)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -38,16 +42,19 @@ export default function Submit() {
     form.reset()
 
     createCandidat({
-      name,
-      lastName,
-      availableFrom,
-      availableTo,
-      cv: {
-        upload: file,
+      variables: {
+        name,
+        lastName,
+        availableFrom,
+        availableTo,
+        cv: {
+          upload: file,
+        },
+        postuleTo: {
+          connect: { id: formData.get('mission') }
+        }
       }
     })
-
-
   }
 
   return (
@@ -60,6 +67,11 @@ export default function Submit() {
       }} />
       <input placeholder="debut de disponibilite" name="availableFrom" type="date" required />
       <input placeholder="fin de disponibilite" name="availableTo" type="date" required />
+      <select name="mission" id="cars" onChange={(event) => {
+        console.dir(event.target)
+      }}>
+        {missions.length && missions.map((mission) => (<option key={mission.id} value={mission.id}>{mission.title}</option>))}
+      </select>
       <button type="submit" disabled={loading}>
         Submit
       </button>

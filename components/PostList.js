@@ -1,84 +1,48 @@
-import { gql, useQuery, NetworkStatus } from '@apollo/client'
+import { gql, useQuery } from '@apollo/client'
 import ErrorMessage from './ErrorMessage'
-import PostUpvoter from './PostUpvoter'
 
-export const GET_CANDIDATE = gql`
+export const ALL_MISSIONS_TITLE_QUERY = gql`
   query {
-    candidats {
-      name
-      lastName
-      availableFrom
-      availableTo
-    }
-  }
-`
-
-export const ALL_POSTS_QUERY = gql`
-  query allPosts($first: Int!, $skip: Int!) {
-    allPosts(orderBy: { createdAt: desc }, first: $first, skip: $skip) {
+    missions {
       id
       title
-      votes
-      url
-      createdAt
     }
-    _allPostsMeta {
-      count
+  }
+`
+export const ALL_MISSIONS_QUERY = gql`
+  query {
+    missions {
+      id
+      title
+      content {
+        document
+      }
+      startDate
+      endDate
     }
   }
 `
 
-export const allPostsQueryVars = {
-  skip: 0,
-  first: 10,
-}
-
 export default function PostList() {
-  const { loading, error, data, fetchMore, networkStatus } = useQuery(
-    ALL_POSTS_QUERY,
-    {
-      variables: allPostsQueryVars,
-      // Setting this value to true will make the component rerender when
-      // the "networkStatus" changes, so we are able to know if it is fetching
-      // more data
-      notifyOnNetworkStatusChange: true,
-    }
-  )
-
-  const loadingMorePosts = networkStatus === NetworkStatus.fetchMore
-
-  const loadMorePosts = () => {
-    fetchMore({
-      variables: {
-        skip: allPosts.length,
-      },
-    })
-  }
+  const { loading, error, data } = useQuery(ALL_MISSIONS_QUERY)
 
   if (error) return <ErrorMessage message="Error loading posts." />
-  if (loading && !loadingMorePosts) return <div>Loading</div>
+  if (loading) return <div>Loading</div>
 
-  const { allPosts, _allPostsMeta } = data
-  const areMorePosts = allPosts.length < _allPostsMeta.count
+  const { missions } = data
 
   return (
     <section>
       <ul>
-        {allPosts.map((post, index) => (
-          <li key={post.id}>
+        {missions.map((mission, index) => (
+          <li key={mission.id}>
             <div>
               <span>{index + 1}. </span>
-              <a href={post.url}>{post.title}</a>
-              <PostUpvoter id={post.id} votes={post.votes} />
+              <a href={mission.url}>{mission.title}</a>
             </div>
           </li>
         ))}
       </ul>
-      {areMorePosts && (
-        <button onClick={() => loadMorePosts()} disabled={loadingMorePosts}>
-          {loadingMorePosts ? 'Loading...' : 'Show More'}
-        </button>
-      )}
       <style jsx>{`
         section {
           padding-bottom: 20px;

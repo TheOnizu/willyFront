@@ -3,8 +3,7 @@ import InfoBox from '../components/InfoBox'
 import Header from '../components/Header'
 import Submit from '../components/Submit'
 import PostList, {
-  ALL_POSTS_QUERY,
-  allPostsQueryVars,
+  ALL_MISSIONS_QUERY
 } from '../components/PostList'
 import { initializeApollo, addApolloState } from '../lib/apolloClient'
 
@@ -21,8 +20,7 @@ export async function getServerSideProps() {
   const apolloClient = initializeApollo()
 
   await apolloClient.query({
-    query: ALL_POSTS_QUERY,
-    variables: allPostsQueryVars,
+    query: ALL_MISSIONS_QUERY,
   })
 
   return addApolloState(apolloClient, {
